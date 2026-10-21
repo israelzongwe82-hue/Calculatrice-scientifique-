@@ -39,10 +39,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Calculatrice Scientifique",
-      "installerIcon": "images/icon.png",
-      "uninstallerIcon": "images/icon.png",
-      "installerHeaderIcon": "images/icon.png"
+      "shortcutName": "Calculatrice Scientifique"
     }
   }
 }
