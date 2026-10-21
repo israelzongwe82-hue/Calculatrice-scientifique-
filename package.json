@@ -1,0 +1,37 @@
+{
+  "name": "calculatrice-scientifique",
+  "version": "1.0.0",
+  "description": "Calculatrice scientifique de KIBWE ZONGWE Israël",
+  "main": "main.js",
+  "author": "KIBWE ZONGWE Israël",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win portable",
+    "build:android": "cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/core": "^7.4.3",
+    "@capacitor/android": "^7.4.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3",
+    "electron": "^38.2.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.israelzongwe.calculatrice",
+    "productName": "Calculatrice Scientifique",
+    "files": [
+      "index.html",
+      "main.js",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ]
+    }
+  }
+}
