@@ -8,7 +8,7 @@
   "private": true,
   "scripts": {
     "start": "electron .",
-    "build:win": "electron-builder --win portable",
+    "build:win": "electron-builder --win nsis",
     "build:android": "cap sync android"
   },
   "dependencies": {
@@ -30,8 +30,19 @@
     ],
     "win": {
       "target": [
-        "portable"
-      ]
+        "nsis"
+      ],
+      "icon": "images/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Calculatrice Scientifique",
+      "installerIcon": "images/icon.png",
+      "uninstallerIcon": "images/icon.png",
+      "installerHeaderIcon": "images/icon.png"
     }
   }
 }
