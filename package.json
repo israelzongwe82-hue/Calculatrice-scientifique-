@@ -23,6 +23,10 @@
   "build": {
     "appId": "com.israelzongwe.calculatrice",
     "productName": "Calculatrice Scientifique",
+    "directories": {
+      "buildResources": "images",
+      "output": "dist"
+    },
     "files": [
       "index.html",
       "main.js",
@@ -32,7 +36,8 @@
       "target": [
         "nsis"
       ],
-      "icon": "images/icon.png"
+      "icon": "images/icon.png",
+      "publish": null
     },
     "nsis": {
       "oneClick": false,
