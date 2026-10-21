@@ -1,0 +1,78 @@
+name: Construire la Calculatrice Scientifique Android
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  build-android:
+    name: Générer l'APK Android
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Installer Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Installer les dépendances
+        run: npm install
+
+      - name: Préparer les fichiers web
+        run: |
+          mkdir -p www
+          cp index.html www/index.html
+
+      - name: Préparer les ressources Android
+        run: |
+          mkdir -p www/images
+          if [ -f images/icon.png ]; then
+            cp images/icon.png www/images/icon.png
+          fi
+
+      - name: Créer le projet Android
+        run: npx cap add android
+
+      - name: Synchroniser le projet Android
+        run: npx cap sync android
+
+      - name: Construire l'APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Publier l'APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Calculatrice-Scientifique-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+:::
+
+### Étape 3 — Générer l'application
+
+1. Enregistrez le fichier en faisant **Commit changes**.
+2. Ouvrez l'onglet **Actions** de votre dépôt.
+3. Sélectionnez **Construire la Calculatrice Scientifique Android**.
+4. Appuyez sur **Run workflow** si nécessaire.
+
+### Étape 4 — Télécharger l'APK
+
+Lorsque la construction réussit, ouvrez l'exécution terminée et cherchez **Artifacts**.
+
+Téléchargez `Calculatrice-Scientifique-APK.zip`, extrayez-le, puis récupérez `app-debug.apk` pour l'installer sur votre téléphone.
+
+**Attention :** ce workflow utilise votre `index.html` actuel. Il ne modifie pas le code de la calculatrice. L'icône personnalisée doit encore être configurée dans les ressources natives Android pour apparaître comme icône de l'application.
