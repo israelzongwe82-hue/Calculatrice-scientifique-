@@ -38,7 +38,7 @@ jobs:
             throw "Le fichier main.js est introuvable."
           }
           if (!(Test-Path "images/icon.png")) {
-            throw "L'icône images/icon.png est introuvable."
+            throw "L'image images/icon.png est introuvable."
           }
 
       - name: Construire l'installateur Windows
