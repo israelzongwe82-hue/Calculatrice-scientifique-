@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculatrice Scientifique</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #1e1e2f;
+    --calc-bg: #2a2a40;
+    --screen-bg: #14141f;
+    --expr-color: #8888aa;
+    --res-color: #ffffff;
+    --btn-bg: #3a3a55;
+    --num-bg: #44445f;
+    --op-bg: #ff9500;
+    --fn-bg: #5a5a80;
+    --eq-bg: #00b894;
+    --clr-bg: #e74c3c;
+    --shift-bg: #8e44ad;
+    --hist-bg: #2a2a40;
+    --hist-border: #3a3a55;
+    --hist-res: #00b894;
+    --text: #ffffff;
+    --panel-bg: #232336;
+    --scale: 1;
+  }
+  body.light {
+    --bg: #f0f0f5;
+    --calc-bg: #ffffff;
+    --screen-bg: #e8e8f0;
+    --expr-color: #666688;
+    --res-color: #111111;
+    --btn-bg: #d8d8e8;
+    --num-bg: #e0e0ee;
+    --op-bg: #ff9500;
+    --fn-bg: #b0b0d0;
+    --eq-bg: #00b894;
+    --clr-bg: #e74c3c;
+    --shift-bg: #8e44ad;
+    --hist-bg: #ffffff;
+    --hist-border: #e0e0e0;
+    --hist-res: #00a37a;
+    --text: #222222;
+    --panel-bg: #f8f8ff;
+  }
+  body {
+    background: var(--bg);
+    font-family: 'Segoe UI', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 10px;
+    color: var(--text);
+    transition: 0.3s;
+  }
+  .app { width: 100%; max-width: 420px; }
+
+  /* ===== ÉCRAN D'ACCUEIL ===== */
+  .welcome-screen {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 20px;
+    text-align: center;
+  }
+
+  /* Boutons de langue en haut à droite */
+  .lang-switch {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 5px;
+  }
+  .lang-switch button {
+    padding: 6px 12px;
+    font-size: 14px;
+    border-radius: 8px;
+    background: var(--btn-bg);
+    color: var(--text);
+    opacity: 0.5;
+    border: 1px solid transparent;
+  }
+  .lang-switch button.active {
+    opacity: 1;
+    background: var(--eq-bg);
+    border-color: var(--eq-bg);
+    color: #fff;
+  }
+
+  .welcome-screen h1 { font-size: 28px; margin-bottom: 10px; color: var(--text); }
+  .welcome-screen p { color: var(--expr-color); margin-bottom: 30px; font-size: 15px; }
+  .welcome-screen input {
+    width: 100%; max-width: 300px; padding: 15px; font-size: 18px;
+    border-radius: 12px; border: 2px solid var(--btn-bg);
+    background: var(--calc-bg); color: var(--text);
+    outline: none; text-align: center; margin-bottom: 20px;
+  }
+  .welcome-screen input:focus { border-color: var(--eq-bg); }
+  .welcome-screen button.start-btn {
+    width: 100%; max-width: 300px; padding: 15px; font-size: 18px;
+    background: var(--eq-bg); color: #fff; border-radius: 12px; font-weight: bold;
+  }
+
+  /* ===== BARRE DU HAUT ===== */
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    gap: 8px;
+  }
+  .topbar button {
+    padding: 8px 14px;
+    font-size: 14px;
+    background: var(--btn-bg);
+    border-radius: 8px;
+    color: var(--text);
+    flex: 1;
+  }
+
+  /* ===== CALCULATRICE ===== */
+  .calc {
+    background: var(--calc-bg);
+    border-radius: 20px;
+    padding: calc(15px * var(--scale));
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    transition: 0.3s;
+  }
+  .screen {
+    background: var(--screen-bg);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 12px;
+    min-height: 90px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+  }
+  
+  .expr {
+    color: var(--expr-color);
+    font-size: calc(22px * var(--scale));
+    word-wrap: break-word;
+    min-height: 30px;
+    outline: none;
+    user-select: none; 
+    -webkit-user-select: none;
+    cursor: text;
+    white-space: pre-wrap;
+    line-height: 1.3;
+  }
+  
+  @keyframes blink { 50% { opacity: 0; } }
+  .cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1.2em;
+    background-color: var(--text);
+    vertical-align: bottom;
+    animation: blink 1s step-end infinite;
+    margin: 0 1px;
+  }
+
+  .result {
+    font-size: calc(30px * var(--scale));
+    font-weight: bold;
+    text-align: right;
+    word-wrap: break-word;
+    color: var(--res-color);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 7px;
+  }
+  button {
+    border: none;
+    border-radius: 9px;
+    padding: 13px 0;
+    font-size: calc(15px * var(--scale));
+    font-weight: 600;
+    color: #fff;
+    background: var(--btn-bg);
+    cursor: pointer;
+    transition: 0.1s;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  button:active { transform: scale(0.93); }
+  .num  { background: var(--num-bg); color: var(--text); }
+  .op   { background: var(--op-bg); }
+  .fn   { background: var(--fn-bg); font-size: calc(13px * var(--scale)); color: var(--text); }
+  .eq   { background: var(--eq-bg); }
+  .clr  { background: var(--clr-bg); }
+  .shift { background: var(--shift-bg); }
+  .cursor-btn { background: #5a5a80; }
+
+  /* 🌟 TEXTE DU NOM (N'est plus un bouton) 🌟 */
+  .user-name-display {
+    grid-column: span 2; /* Prend la place de 2 cases */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--eq-bg);
+    font-size: calc(14px * var(--scale));
+    font-weight: 600;
+    font-style: italic;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 5px;
+    pointer-events: none; /* Empêche totalement le clic */
+  }
+
+  /* ===== PANNEAUX ===== */
+  .overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6); display: none;
+    justify-content: center; align-items: center;
+    z-index: 100; padding: 15px;
+  }
+  .overlay.show { display: flex; }
+  .panel {
+    background: var(--panel-bg); border-radius: 18px;
+    padding: 20px; width: 100%; max-width: 400px;
+    max-height: 85vh; overflow-y: auto; color: var(--text);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+  }
+  .panel-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;
+  }
+  .panel-header h2 { font-size: 20px; }
+  .panel-header button {
+    padding: 6px 12px; font-size: 16px; background: var(--clr-bg); border-radius: 8px;
+  }
+
+  .setting { margin-bottom: 22px; }
+  .setting label { display: block; font-size: 15px; margin-bottom: 10px; font-weight: 600; }
+  
+  .setting input[type="text"] {
+    width: 100%; padding: 10px; font-size: 16px; border-radius: 8px;
+    border: 2px solid var(--btn-bg); background: var(--calc-bg);
+    color: var(--text); outline: none; margin-bottom: 10px;
+  }
+  .setting input[type="text"]:focus { border-color: var(--eq-bg); }
+
+  .save-btn {
+    background: var(--eq-bg); color: #fff; padding: 10px 15px;
+    border-radius: 8px; font-size: 14px; width: 100%;
+  }
+
+  .theme-switch { display: flex; gap: 10px; }
+  .theme-switch button {
+    flex: 1; padding: 12px; background: var(--btn-bg);
+    border-radius: 10px; font-size: 14px; opacity: 0.6;
+  }
+  .theme-switch button.active { opacity: 1; background: var(--eq-bg); }
+  input[type="range"] {
+    width: 100%; height: 8px; background: var(--btn-bg);
+    border-radius: 5px; outline: none; accent-color: var(--eq-bg);
+  }
+  .credit {
+    text-align: center; font-size: 13px; color: var(--expr-color);
+    margin-top: 25px; padding-top: 15px;
+    border-top: 1px solid var(--hist-border); font-style: italic;
+  }
+
+  .hist-list { display: flex; flex-direction: column; gap: 8px; }
+  .hist-item {
+    padding: 10px; background: var(--calc-bg); border-radius: 10px;
+    border-left: 3px solid var(--eq-bg);
+  }
+  .hist-expr { color: var(--expr-color); font-size: 13px; word-wrap: break-word; }
+  .hist-res  { color: var(--hist-res); font-weight: bold; text-align: right; font-size: 16px; margin-top: 4px; }
+  .empty { color: var(--expr-color); text-align: center; font-size: 14px; padding: 20px; }
+</style>
+</head>
+<body>
+
+<!-- ÉCRAN D'ACCUEIL -->
+<div class="welcome-screen" id="welcomeScreen" style="display: none;">
+  
+  <!-- Choix de la langue -->
+  <div class="lang-switch">
+    <button id="btn-fr" onclick="setWelcomeLang('fr')">🇫🇷 FR</button>
+    <button id="btn-en" onclick="setWelcomeLang('en')">🇬🇧 EN</button>
+  </div>
+
+  <h1 id="welcome-title">Bienvenue ! 👋</h1>
+  <p id="welcome-text">Comment t'appelles-tu ?</p>
+  <input type="text" id="nameInput" placeholder="Ton nom ici..." maxlength="20">
+  <button class="start-btn" id="welcome-btn" onclick="saveNameWelcome()">C'est parti ! 🚀</button>
+</div>
+
+<!-- L'APPLICATION PRINCIPALE -->
+<div class="app">
+  <div class="topbar">
+    <button onclick="openHistory()">📜 Historique</button>
+    <button onclick="openSettings()">⚙️ Paramètres</button>
+  </div>
+
+  <div class="calc">
+    <div class="screen">
+      <div class="expr" id="expr"></div>
+      <div class="result" id="result">0</div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
+</div>
+
+<!-- PANNEAU PARAMÈTRES -->
+<div class="overlay" id="settingsOverlay">
+  <div class="panel">
+    <div class="panel-header">
+      <h2>⚙️ Paramètres</h2>
+      <button onclick="closePanel('settingsOverlay')">✕</button>
+    </div>
+
+    <div class="setting">
+      <label>👤 Profil Utilisateur</label>
+      <input type="text" id="settingsNameInput" maxlength="20">
+      <button class="save-btn" onclick="saveNameSettings()">Enregistrer le nom</button>
+    </div>
+
+    <div class="setting">
+      <label>🎨 Apparence</label>
+      <div class="theme-switch">
+        <button id="darkBtn" onclick="setTheme('dark')">🌙 Sombre</button>
+        <button id="lightBtn" onclick="setTheme('light')">☀️ Clair</button>
+      </div>
+    </div>
+    <div class="setting">
+      <label>📏 Taille — Horizontal <span id="scaleXLabel">100%</span></label>
+      <input type="range" id="scaleX" min="70" max="130" value="100" oninput="setScaleX(this.value)">
+    </div>
+    <div class="setting">
+      <label>📏 Taille — Vertical <span id="scaleYLabel">100%</span></label>
+      <input type="range" id="scaleY" min="70" max="130" value="100" oninput="setScaleY(this.value)">
+    </div>
+    <div class="credit">Créé par KIBWE ZONGWE Israël</div>
+  </div>
+</div>
+
+<!-- PANNEAU HISTORIQUE -->
+<div class="overlay" id="historyOverlay">
+  <div class="panel">
+    <div class="panel-header">
+      <h2>📜 Historique</h2>
+      <div style="display:flex; gap:8px;">
+        <button onclick="clearHistory()" style="background:var(--clr-bg);">Effacer</button>
+        <button onclick="closePanel('historyOverlay')">✕</button>
+      </div>
+    </div>
+    <div class="hist-list" id="histList">
+      <div class="empty">Aucun calcul pour l'instant</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let expression = "";
+let cursorPos = 0; 
+let shifted = false;
+let hyp = false;
+let historyArr = [];
+let Ans = 0;
+let userName = ""; 
+
+const exprEl = document.getElementById("expr");
+const resEl  = document.getElementById("result");
+const grid   = document.getElementById("grid");
+const histList = document.getElementById("histList");
+
+// ============ GESTION DE LA LANGUE D'ACCUEIL ============
+function setWelcomeLang(lang) {
+  const title = document.getElementById("welcome-title");
+  const text = document.getElementById("welcome-text");
+  const input = document.getElementById("nameInput");
+  const btn = document.getElementById("welcome-btn");
+  const btnFr = document.getElementById("btn-fr");
+  const btnEn = document.getElementById("btn-en");
+
+  if (lang === 'en') {
+    title.textContent = "Welcome! 👋";
+    text.textContent = "What is your name?";
+    input.placeholder = "Your name here...";
+    btn.textContent = "Let's go! 🚀";
+    btnFr.classList.remove("active");
+    btnEn.classList.add("active");
+  } else {
+    title.textContent = "Bienvenue ! 👋";
+    text.textContent = "Comment t'appelles-tu ?";
+    input.placeholder = "Ton nom ici...";
+    btn.textContent = "C'est parti ! 🚀";
+    btnEn.classList.remove("active");
+    btnFr.classList.add("active");
+  }
+}
+
+// ============ GESTION DU NOM ============
+function checkName() {
+  const savedName = localStorage.getItem("userName");
+  if (!savedName) {
+    document.getElementById("welcomeScreen").style.display = "flex";
+    setWelcomeLang('fr'); // Langue par défaut au premier lancement
+  } else {
+    userName = savedName;
+    document.getElementById("settingsNameInput").value = userName; 
+    renderButtons(); 
+  }
+}
+
+function saveNameWelcome() {
+  const input = document.getElementById("nameInput").value.trim();
+  if (input === "") {
+    alert("S'il te plaît, écris ton nom ! / Please write your name!");
+    return;
+  }
+  userName = input;
+  localStorage.setItem("userName", userName);
+  document.getElementById("welcomeScreen").style.display = "none";
+  document.getElementById("settingsNameInput").value = userName;
+  renderButtons(); 
+}
+
+function saveNameSettings() {
+  const input = document.getElementById("settingsNameInput").value.trim();
+  if (input === "") {
+    alert("Le nom ne peut pas être vide !");
+    return;
+  }
+  userName = input;
+  localStorage.setItem("userName", userName);
+  renderButtons(); 
+  alert("Nom modifié avec succès ! ✅");
+}
+
+// ============ GESTION DU CURSEUR ============
+function updateDisplay() {
+  const avant = expression.slice(0, cursorPos);
+  const apres = expression.slice(cursorPos);
+  exprEl.innerHTML = avant + '<span class="cursor"></span>' + apres;
+}
+
+exprEl.addEventListener("click", function(e) {
+  let range = document.caretRangeFromPoint(e.clientX, e.clientY);
+  if (!range) return;
+  let textNode = range.startContainer;
+  let offset = range.startOffset;
+  let newPos = 0;
+  let found = false;
+  for (let i = 0; i < exprEl.childNodes.length; i++) {
+    let node = exprEl.childNodes[i];
+    if (node === textNode) {
+      newPos += offset;
+      found = true;
+      break;
+    } else {
+      if (node.nodeType === Node.TEXT_NODE) newPos += node.textContent.length;
+    }
+  }
+  if (found) {
+    cursorPos = Math.min(newPos, expression.length);
+    updateDisplay();
+  }
+});
+
+// ============ ACTIONS ============
+function add(val) {
+  if (resEl.textContent !== "0" && exprEl.innerHTML === '<span class="cursor"></span>') {
+    resEl.textContent = "0";
+  }
+  expression = expression.slice(0, cursorPos) + val + expression.slice(cursorPos);
+  cursorPos += val.length;
+  updateDisplay();
+}
+
+function clearAll() {
+  expression = "";
+  cursorPos = 0;
+  resEl.textContent = "0";
+  updateDisplay();
+}
+
+function backspace() {
+  if (cursorPos > 0) {
+    expression = expression.slice(0, cursorPos - 1) + expression.slice(cursorPos);
+    cursorPos--;
+    updateDisplay();
+  }
+  if (expression === "") resEl.textContent = "0";
+}
+
+function moveCursorLeft() {
+  if (cursorPos > 0) { cursorPos--; updateDisplay(); }
+}
+function moveCursorRight() {
+  if (cursorPos < expression.length) { cursorPos++; updateDisplay(); }
+}
+
+function toggleShift() {
+  shifted = !shifted;
+  renderButtons();
+}
+
+function toggleHyp() {
+  hyp = !hyp;
+  add("hyp");
+  renderButtons();
+}
+
+// ============ LAYOUTS DES BOUTONS ============
+const normalTop = [
+  { l:"SHIFT", fn:"toggleShift", t:"shift" },
+  { l:"x⁻¹",  fn:"add", arg:"^(-1)", t:"fn" },
+  { l:"x²",   fn:"add", arg:"^2",    t:"fn" },
+  { l:"x³",   fn:"add", arg:"^3",    t:"fn" },
+  { l:"√",    fn:"add", arg:"√(",    t:"fn" },
+
+  { l:"x!",   fn:"add", arg:"!",     t:"fn" },
+  { l:"(",    fn:"add", arg:"(",     t:"fn" },
+  { l:")",    fn:"add", arg:")",     t:"fn" },
+  { l:"π",    fn:"add", arg:"π",     t:"fn" },
+  { l:"e",    fn:"add", arg:"e",     t:"fn" }
+];
+
+const shiftTop = [
+  { l:"NORMAL", fn:"toggleShift", t:"shift" },
+  { l:"log",  fn:"add", arg:"log(", t:"fn" },
+  { l:"ln",   fn:"add", arg:"ln(",  t:"fn" },
+  { l:"sin",  fn:"add", arg:"sin(", t:"fn" },
+  { l:"∛",    fn:"add", arg:"∛(",    t:"fn" },
+
+  { l:"cos",  fn:"add", arg:"cos(", t:"fn" },
+  { l:"tan",  fn:"add", arg:"tan(", t:"fn" },
+  { l:"Pol(", fn:"add", arg:"Pol(", t:"fn" },
+  { l:"hyp",  fn:"toggleHyp",       t:"fn" },
+  { l:"mod",  fn:"add", arg:" mod ",t:"fn" }
+];
+
+function renderButtons() {
+  grid.innerHTML = "";
+  const topLayout = shifted ? shiftTop : normalTop;
+  topLayout.forEach(btn => {
+    const b = document.createElement("button");
+    b.className = btn.t;
+    b.textContent = btn.l;
+    b.onclick = () => window[btn.fn](btn.arg);
+    if (btn.t === "shift" && shifted) b.style.background = "#e67e22";
+    if (btn.l === "hyp" && hyp) b.style.background = "#e67e22";
+    grid.appendChild(b);
+  });
+
+  const bottomRowsFinal = [
+    { l:"C", fn:"clearAll", t:"clr" },
+    { l:"⌫", fn:"backspace", t:"clr" },
+    { l:"◀", fn:"moveCursorLeft", t:"cursor-btn" },
+    { l:"▶", fn:"moveCursorRight", t:"cursor-btn" },
+    { l:"Ans", fn:"add", arg:"Ans", t:"fn" },
+
+    { l:"7", fn:"add", arg:"7", t:"num" },
+    { l:"8", fn:"add", arg:"8", t:"num" },
+    { l:"9", fn:"add", arg:"9", t:"num" },
+    { l:"÷", fn:"add", arg:"÷", t:"op"  },
+    { l:"×", fn:"add", arg:"×", t:"op"  },
+
+    { l:"4", fn:"add", arg:"4", t:"num" },
+    { l:"5", fn:"add", arg:"5", t:"num" },
+    { l:"6", fn:"add", arg:"6", t:"num" },
+    { l:"−", fn:"add", arg:"-", t:"op"  },
+    { l:"+", fn:"add", arg:"+", t:"op"  },
+
+    { l:"1", fn:"add", arg:"1", t:"num" },
+    { l:"2", fn:"add", arg:"2", t:"num" },
+    { l:"3", fn:"add", arg:"3", t:"num" },
+    { l:".", fn:"add", arg:".", t:"num" },
+    { l:"=", fn:"calculate",    t:"eq"  },
+
+    { l:"0", fn:"add", arg:"0",  t:"num" },
+    { l:"00",fn:"add", arg:"00", t:"num" },
+    { l:"%", fn:"add", arg:"%",  t:"fn"  }
+  ];
+
+  bottomRowsFinal.forEach(btn => {
+    const b = document.createElement("button");
+    b.className = btn.t;
+    b.textContent = btn.l;
+    b.onclick = () => {
+      if (btn.arg !== undefined) window[btn.fn](btn.arg);
+      else window[btn.fn]();
+    };
+    grid.appendChild(b);
+  });
+
+  // 🌟 AFFICHAGE DU NOM (Texte propre, non cliquable) 🌟
+  const nameDiv = document.createElement("div");
+  nameDiv.className = "user-name-display";
+  nameDiv.textContent = userName;
+  grid.appendChild(nameDiv);
+}
+
+// ============ CALCUL ============
+function prepare(expr) {
+  let s = expr;
+  s = s.replace(/×/g, "*").replace(/÷/g, "/");
+  s = s.replace(/π/g, "Math.PI");
+  s = s.replace(/\be\b/g, "Math.E");
+  s = s.replace(/√\(/g, "Math.sqrt(");
+  s = s.replace(/∛\(/g, "Math.cbrt(");
+  s = s.replace(/sin\(/g, "Math.sin(");
+  s = s.replace(/cos\(/g, "Math.cos(");
+  s = s.replace(/tan\(/g, "Math.tan(");
+  s = s.replace(/log\(/g, "Math.log10(");
+  s = s.replace(/ln\(/g,  "Math.log(");
+  s = s.replace(/\^/g, "**");
+  s = s.replace(/ mod /g, " % ");
+  s = s.replace(/%/g, "/100");
+  s = s.replace(/\bAns\b/g, Ans);
+  s = s.replace(/(\d+)!/g, (m, n) => fact(parseInt(n)));
+  return s;
+}
+
+function calculate() {
+  try {
+    let s = prepare(expression);
+    let result = eval(s);
+    if (typeof result !== "number" || isNaN(result)) {
+      resEl.textContent = "Erreur";
+      return;
+    }
+    resEl.textContent = result;
+    historyArr.unshift({ expr: expression, res: result });
+    if (historyArr.length > 50) historyArr.pop();
+    renderHistory();
+    Ans = result;
+    cursorPos = expression.length;
+    updateDisplay();
+  } catch (err) {
+    resEl.textContent = "Erreur";
+  }
+}
+
+function fact(n) {
+  if (n < 0) return NaN;
+  let r = 1;
+  for (let i = 2; i <= n; i++) r *= i;
+  return r;
+}
+
+// ============ CLAVIER PHYSIQUE ============
+document.addEventListener("keydown", function(e) {
+  if (document.getElementById("welcomeScreen").style.display === "flex") return;
+  if (document.querySelector(".overlay.show")) return;
+
+  if (e.key >= "0" && e.key <= "9") add(e.key);
+  else if (e.key === "+") add("+");
+  else if (e.key === "-") add("-");
+  else if (e.key === "*") add("×");
+  else if (e.key === "/") add("÷");
+  else if (e.key === "." || e.key === ",") add(".");
+  else if (e.key === "(") add("(");
+  else if (e.key === ")") add(")");
+  else if (e.key === "^") add("^");
+  else if (e.key === "%") add("%");
+  else if (e.key === "Enter" || e.key === "=") { e.preventDefault(); calculate(); }
+  else if (e.key === "Backspace") { e.preventDefault(); backspace(); }
+  else if (e.key === "Delete") clearAll();
+  else if (e.key === "ArrowLeft") moveCursorLeft();
+  else if (e.key === "ArrowRight") moveCursorRight();
+});
+
+// ============ HISTORIQUE, PANNEAUX ET THÈME ============
+function renderHistory() {
+  if (historyArr.length === 0) {
+    histList.innerHTML = '<div class="empty">Aucun calcul pour l\'instant</div>';
+    return;
+  }
+  histList.innerHTML = historyArr.map(h => `
+    <div class="hist-item">
+      <div class="hist-expr">${h.expr}</div>
+      <div class="hist-res">= ${h.res}</div>
+    </div>
+  `).join("");
+}
+function clearHistory() { historyArr = []; renderHistory(); }
+
+function openSettings() {
+  document.getElementById("settingsOverlay").classList.add("show");
+  window.history.pushState({ panel: "settings" }, "");
+}
+function openHistory() {
+  renderHistory();
+  document.getElementById("historyOverlay").classList.add("show");
+  window.history.pushState({ panel: "history" }, "");
+}
+function closePanel(id) {
+  document.getElementById(id).classList.remove("show");
+  if (window.history.state && window.history.state.panel) window.history.back();
+}
+
+window.addEventListener("popstate", function(e) {
+  const s = document.getElementById("settingsOverlay");
+  const h = document.getElementById("historyOverlay");
+  if (s.classList.contains("show")) s.classList.remove("show");
+  else if (h.classList.contains("show")) h.classList.remove("show");
+});
+
+document.querySelectorAll(".overlay").forEach(ov => {
+  ov.addEventListener("click", e => { if (e.target === ov) closePanel(ov.id); });
+});
+
+function setTheme(mode) {
+  if (mode === "light") {
+    document.body.classList.add("light");
+    document.getElementById("lightBtn").classList.add("active");
+    document.getElementById("darkBtn").classList.remove("active");
+  } else {
+    document.body.classList.remove("light");
+    document.getElementById("darkBtn").classList.add("active");
+    document.getElementById("lightBtn").classList.remove("active");
+  }
+  localStorage.setItem("theme", mode);
+}
+
+function setScaleX(val) {
+  document.getElementById("scaleXLabel").textContent = val + "%";
+  document.documentElement.style.setProperty("--scale-x", val/100);
+  document.querySelector(".app").style.maxWidth = (420 * val/100) + "px";
+  localStorage.setItem("scaleX", val);
+}
+function setScaleY(val) {
+  document.getElementById("scaleYLabel").textContent = val + "%";
+  document.documentElement.style.setProperty("--scale", val/100);
+  localStorage.setItem("scaleY", val);
+}
+
+// ============ INITIALISATION ============
+checkName(); 
+updateDisplay(); 
+
+const savedTheme = localStorage.getItem("theme") || "dark";
+setTheme(savedTheme);
+
+const savedX = localStorage.getItem("scaleX") || "100";
+document.getElementById("scaleX").value = savedX;
+setScaleX(savedX);
+
+const savedY = localStorage.getItem("scaleY") || "100";
+document.getElementById("scaleY").value = savedY;
+setScaleY(savedY);
+</script>
+
+</body>
+</html>
