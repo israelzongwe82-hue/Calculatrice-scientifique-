@@ -44,10 +44,19 @@ jobs:
       - name: Construire l'installateur Windows
         run: npm run build:win
 
+      - name: Vérifier les fichiers générés
+        shell: pwsh
+        run: |
+          Get-ChildItem -Path dist -Filter *.exe
+          $files = Get-ChildItem -Path dist -Filter *.exe
+          if ($files.Count -eq 0) {
+            throw "Aucun fichier EXE n'a été généré."
+          }
+
       - name: Publier l'installateur
         uses: actions/upload-artifact@v4
         with:
           name: Calculatrice-Scientifique-Installateur-Windows
-          path: dist/*-setup.exe
+          path: dist/*.exe
           if-no-files-found: error
           retention-days: 7
