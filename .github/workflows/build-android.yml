@@ -7,13 +7,16 @@ on:
       - main
       - master
 
+permissions:
+  contents: read
+
 jobs:
   build-android:
-    name: Générer l'APK Android
     runs-on: ubuntu-latest
+    timeout-minutes: 45
 
     steps:
-      - name: Récupérer le code
+      - name: Télécharger le dépôt
         uses: actions/checkout@v4
 
       - name: Installer Node.js
@@ -21,23 +24,31 @@ jobs:
         with:
           node-version: 22
 
-      - name: Installer Java
+      - name: Installer Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
 
+      - name: Installer Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Configurer Gradle
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Installer les dépendances
         run: npm install
 
+      - name: Vérifier la configuration
+        run: |
+          node --version
+          java -version
+          npx cap --version
+
       - name: Préparer les fichiers web
         run: |
-          mkdir -p www
-          cp index.html www/index.html
-
-      - name: Préparer les ressources Android
-        run: |
           mkdir -p www/images
+          cp index.html www/index.html
           if [ -f images/icon.png ]; then
             cp images/icon.png www/images/icon.png
           fi
@@ -45,12 +56,12 @@ jobs:
       - name: Créer le projet Android
         run: npx cap add android
 
-      - name: Synchroniser le projet Android
+      - name: Synchroniser Android
         run: npx cap sync android
 
       - name: Construire l'APK
+        working-directory: android
         run: |
-          cd android
           chmod +x gradlew
           ./gradlew assembleDebug
 
@@ -60,19 +71,4 @@ jobs:
           name: Calculatrice-Scientifique-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
-:::
-
-### Étape 3 — Générer l'application
-
-1. Enregistrez le fichier en faisant **Commit changes**.
-2. Ouvrez l'onglet **Actions** de votre dépôt.
-3. Sélectionnez **Construire la Calculatrice Scientifique Android**.
-4. Appuyez sur **Run workflow** si nécessaire.
-
-### Étape 4 — Télécharger l'APK
-
-Lorsque la construction réussit, ouvrez l'exécution terminée et cherchez **Artifacts**.
-
-Téléchargez `Calculatrice-Scientifique-APK.zip`, extrayez-le, puis récupérez `app-debug.apk` pour l'installer sur votre téléphone.
-
-**Attention :** ce workflow utilise votre `index.html` actuel. Il ne modifie pas le code de la calculatrice. L'icône personnalisée doit encore être configurée dans les ressources natives Android pour apparaître comme icône de l'application.
+          retention-days: 7
