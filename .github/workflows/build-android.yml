@@ -48,16 +48,22 @@ jobs:
           java -version
           npx cap --version
 
-      - name: Préparer les fichiers web
+      - name: Préparer les fichiers web et l'icône
         run: |
-          mkdir -p www/images
+          mkdir -p www/images assets
           cp index.html www/index.html
-          if [ -f images/icon.png ]; then
-            cp images/icon.png www/images/icon.png
-          fi
+          test -f images/icon.png
+          cp images/icon.png www/images/icon.png
+          cp images/icon.png assets/icon.png
+
+      - name: Installer le générateur d'icônes
+        run: npm install --no-save @capacitor/assets
 
       - name: Créer le projet Android
         run: npx cap add android
+
+      - name: Générer les ressources de l'icône
+        run: npx @capacitor/assets generate --android
 
       - name: Synchroniser Android
         run: npx cap sync android
