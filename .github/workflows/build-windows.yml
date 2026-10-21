@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   build-windows:
-    name: Générer le programme Windows EXE
+    name: Générer l'installateur Windows
     runs-on: windows-latest
     timeout-minutes: 30
 
@@ -41,13 +41,13 @@ jobs:
             throw "L'icône images/icon.png est introuvable."
           }
 
-      - name: Construire le programme Windows
+      - name: Construire l'installateur Windows
         run: npm run build:win
 
-      - name: Publier le programme EXE
+      - name: Publier l'installateur
         uses: actions/upload-artifact@v4
         with:
-          name: Calculatrice-Scientifique-Windows
-          path: dist/*.exe
+          name: Calculatrice-Scientifique-Installateur-Windows
+          path: dist/*-setup.exe
           if-no-files-found: error
           retention-days: 7
